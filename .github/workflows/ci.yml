@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.platform }} app variants
+    runs-on: macos-26
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [iOS, macOS]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show selected toolchain
+        run: xcodebuild -version
+      - name: Build simple and full apps in Debug and Release
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          if [[ "$PLATFORM" == iOS ]]; then
+            schemes=('Fruta iOS' 'Fruta iOS All')
+            sdk=iphonesimulator
+            destination='generic/platform=iOS Simulator'
+          else
+            schemes=('Fruta macOS' 'Fruta macOS All')
+            sdk=macosx
+            destination='platform=macOS'
+          fi
+          mkdir -p "$RUNNER_TEMP/fruta-build-logs"
+          for scheme in "${schemes[@]}"; do
+            slug=${scheme// /-}
+            for configuration in Debug Release; do
+              echo "Building $scheme ($configuration)"
+              xcodebuild -project Fruta.xcodeproj -scheme "$scheme" \
+                -configuration "$configuration" -sdk "$sdk" \
+                -destination "$destination" -jobs 2 \
+                -derivedDataPath "$RUNNER_TEMP/$slug-$configuration" \
+                CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+                build 2>&1 | tee "$RUNNER_TEMP/fruta-build-logs/$slug-$configuration.log"
+            done
+          done
+          echo 'Build coverage only: simple/full iOS and macOS apps in Debug/Release, including embedded widgets and App Clip. No runnable test target exists; purchases, accounts and app behavior are not validated.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify tracked source was preserved
+        run: git diff --exit-code
+      - name: Retain failure logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: build-failure-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/fruta-build-logs/
+          retention-days: 3
