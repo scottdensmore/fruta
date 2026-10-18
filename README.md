@@ -2,6 +2,19 @@
 
 Create a shared codebase to build a multiplatform app that offers widgets and an App Clip.
 
+## Continuous integration
+
+GitHub Actions builds the simple and full-featured iOS and macOS apps in Debug
+and Release on PRs and pushes to `main`. Full-app builds include their embedded
+widget extensions and iOS App Clip. All builds are unsigned and use the runner's
+selected Xcode without account setup or publishing.
+
+This is build coverage only. The shared iOS All scheme still references an old
+unit-test target that is absent from the project; there is no runnable test
+suite in this checkout. CI does not validate app behavior, purchases, Sign in
+with Apple, or device provisioning. Existing sample setup instructions below
+apply to local interactive use.
+
 ## Overview
 
 - Note: This sample project is associated with WWDC21 sessions [10107: Platforms State of the Union](https://developer.apple.com/wwdc21/10107/), [10012: What's New in App Clips](https://developer.apple.com/wwdc21/10012/), [10013: Build Light and Fast App Clips](https://developer.apple.com/wwdc21/10013/), [10220: Localize your SwiftUI App](https://developer.apple.com/wwdc21/10220/).
