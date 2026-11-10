@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AppSidebarNavigation: View {
 
-    enum NavigationItem {
+    enum NavigationItem: Hashable {
         case menu
         case favorites
         case recipes
@@ -20,24 +20,18 @@ struct AppSidebarNavigation: View {
     @State private var selection: NavigationItem? = .menu
     
     var body: some View {
-        NavigationView {
-            List {
-                NavigationLink(tag: NavigationItem.menu, selection: $selection) {
-                    SmoothieMenu()
-                } label: {
+        NavigationSplitView {
+            List(selection: $selection) {
+                NavigationLink(value: NavigationItem.menu) {
                     Label("Menu", systemImage: "list.bullet")
                 }
                 
-                NavigationLink(tag: NavigationItem.favorites, selection: $selection) {
-                    FavoriteSmoothies()
-                } label: {
+                NavigationLink(value: NavigationItem.favorites) {
                     Label("Favorites", systemImage: "heart")
                 }
             
                 #if EXTENDED_ALL
-                NavigationLink(tag: NavigationItem.recipes, selection: $selection) {
-                    RecipeList()
-                } label: {
+                NavigationLink(value: NavigationItem.recipes) {
                     Label("Recipes", systemImage: "book.closed")
                 }
                 #endif
@@ -48,23 +42,47 @@ struct AppSidebarNavigation: View {
                 Pocket()
             }
             #endif
-            
-            Text("Select a category")
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background()
-                .ignoresSafeArea()
-            
-            Text("Select a smoothie")
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background()
-                .ignoresSafeArea()
-                .toolbar {
-                    SmoothieFavoriteButton()
+        } content: {
+            switch selection {
+            case .menu:
+                SmoothieMenu()
+            case .favorites:
+                FavoriteSmoothies()
+            #if EXTENDED_ALL
+            case .recipes:
+                RecipeList()
+            #endif
+            default:
+                Text("Select a category")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background()
+                    .ignoresSafeArea()
+            }
+        } detail: {
+            if let smoothieID = model.selectedSmoothieID, let smoothie = Smoothie(for: smoothieID) {
+                #if EXTENDED_ALL
+                if selection == .recipes {
+                    RecipeView(smoothie: smoothie)
                         .environmentObject(model)
-                        .disabled(true)
+                } else {
+                    SmoothieView(smoothie: smoothie)
                 }
+                #else
+                SmoothieView(smoothie: smoothie)
+                #endif
+            } else {
+                Text("Select a smoothie")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background()
+                    .ignoresSafeArea()
+                    .toolbar {
+                        SmoothieFavoriteButton()
+                            .environmentObject(model)
+                            .disabled(true)
+                    }
+            }
         }
     }
     

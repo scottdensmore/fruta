@@ -192,7 +192,7 @@ struct SmoothieView: View {
 struct SmoothieView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            NavigationView {
+            NavigationStack {
                 SmoothieView(smoothie: .berryBlue)
             }
             

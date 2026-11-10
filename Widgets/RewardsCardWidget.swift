@@ -17,6 +17,7 @@ struct RewardsCardWidget: Widget {
         .description(Text("See your progress towards your next free smoothie!",
                           comment: "Description shown for the widget when the user adds or edits it"))
         .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
@@ -57,10 +58,10 @@ public struct RewardsCardEntryView: View {
     }
     
     public var body: some View {
-        ZStack {
-            BubbleBackground()
-            RewardsCard(totalStamps: entry.points, hasAccount: true, compact: compact)
-        }
+        RewardsCard(totalStamps: entry.points, hasAccount: true, compact: compact)
+            .containerBackground(for: .widget) {
+                BubbleBackground()
+            }
     }
 }
 

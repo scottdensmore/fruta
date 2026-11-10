@@ -52,7 +52,7 @@ struct OrderPlacedView: View {
                 }
             #endif
         }
-        .onChange(of: model.hasAccount) { _ in
+        .onChange(of: model.hasAccount) {
             #if APPCLIP
             if model.hasAccount {
                 presentingAppStoreOverlay = true

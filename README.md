@@ -30,7 +30,7 @@ The Fruta sample app leverages [Sign in with Apple](https://developer.apple.com/
 
 ## Configure the Sample Code Project
 
-To build this project for iOS 15.4, use Xcode 13.3. The runtime requirement is iOS 15.4. To build this project for macOS 12.3, use Xcode 13.3. 
+To build this project for iOS 26.0 and macOS 26.0, use Xcode 26 or later.
 
 To configure the iOS and macOS app targets without an Apple Developer account, follow these steps:
 
@@ -98,7 +98,7 @@ VStack(spacing: 0) {
         }
     #endif
 }
-.onChange(of: model.hasAccount) { _ in
+.onChange(of: model.hasAccount) {
     #if APPCLIP
     if model.hasAccount {
         presentingAppStoreOverlay = true
