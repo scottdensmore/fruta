@@ -17,7 +17,7 @@ struct RecipeList: View {
     }
     
     var body: some View {
-        List {
+        List(selection: $model.selectedSmoothieID) {
             #if os(iOS)
             if !model.allRecipesUnlocked {
                 Section {
@@ -31,10 +31,7 @@ struct RecipeList: View {
             }
             #endif
             ForEach(smoothies) { smoothie in
-                NavigationLink(tag: smoothie.id, selection: $model.selectedSmoothieID) {
-                    RecipeView(smoothie: smoothie)
-                        .environmentObject(model)
-                } label: {
+                NavigationLink(value: smoothie.id) {
                     SmoothieRow(smoothie: smoothie)
                         .padding(.vertical, 5)
                 }
@@ -92,13 +89,13 @@ struct RecipeList_Previews: PreviewProvider {
     }()
     static var previews: some View {
         Group {
-            NavigationView {
+            NavigationStack {
                 RecipeList()
             }
             .environmentObject(Model())
             .previewDisplayName("Locked")
             
-            NavigationView {
+            NavigationStack {
                 RecipeList()
             }
             .environmentObject(unlocked)

@@ -12,11 +12,18 @@ import CoreLocation
 @main
 struct FrutaAppClip: App {
     @StateObject private var model = Model()
+    @State private var path: [Smoothie.ID] = []
     
     var body: some Scene {
         WindowGroup {
-            NavigationView {
+            NavigationStack(path: $path) {
                 SmoothieMenu()
+                    .navigationDestination(for: Smoothie.ID.self) { smoothieID in
+                        if let smoothie = Smoothie(for: smoothieID) {
+                            SmoothieView(smoothie: smoothie)
+                                .onAppear { model.selectedSmoothieID = smoothieID }
+                        }
+                    }
             }
             .environmentObject(model)
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb, perform: handleUserActivity)
@@ -34,6 +41,9 @@ struct FrutaAppClip: App {
         
         if let smoothieID = queryItems.first(where: { $0.name == "smoothie" })?.value {
             model.selectedSmoothieID = smoothieID
+            if Smoothie(for: smoothieID) != nil {
+                path = [smoothieID]
+            }
         }
         
         guard

@@ -16,12 +16,19 @@ struct AppTabNavigation: View {
         case recipes
     }
 
+    @EnvironmentObject private var model: Model
     @State private var selection: Tab = .menu
 
     var body: some View {
         TabView(selection: $selection) {
-            NavigationView {
+            NavigationStack {
                 SmoothieMenu()
+                    .navigationDestination(for: Smoothie.ID.self) { smoothieID in
+                        if let smoothie = Smoothie(for: smoothieID) {
+                            SmoothieView(smoothie: smoothie)
+                                .onAppear { model.selectedSmoothieID = smoothieID }
+                        }
+                    }
             }
             .tabItem {
                 let menuText = Text("Menu", comment: "Smoothie menu tab title")
@@ -29,12 +36,18 @@ struct AppTabNavigation: View {
                     menuText
                 } icon: {
                     Image(systemName: "list.bullet")
-                }.accessibility(label: menuText)
+                }.accessibilityLabel(menuText)
             }
             .tag(Tab.menu)
             
-            NavigationView {
+            NavigationStack {
                 FavoriteSmoothies()
+                    .navigationDestination(for: Smoothie.ID.self) { smoothieID in
+                        if let smoothie = Smoothie(for: smoothieID) {
+                            SmoothieView(smoothie: smoothie)
+                                .onAppear { model.selectedSmoothieID = smoothieID }
+                        }
+                    }
             }
             .tabItem {
                 Label {
@@ -47,7 +60,7 @@ struct AppTabNavigation: View {
             .tag(Tab.favorites)
             
             #if EXTENDED_ALL
-            NavigationView {
+            NavigationStack {
                 RewardsView()
             }
             .tabItem {
@@ -60,8 +73,15 @@ struct AppTabNavigation: View {
             }
             .tag(Tab.rewards)
             
-            NavigationView {
+            NavigationStack {
                 RecipeList()
+                    .navigationDestination(for: Smoothie.ID.self) { smoothieID in
+                        if let smoothie = Smoothie(for: smoothieID) {
+                            RecipeView(smoothie: smoothie)
+                                .environmentObject(model)
+                                .onAppear { model.selectedSmoothieID = smoothieID }
+                        }
+                    }
             }
             .tabItem {
                 Label {
@@ -80,5 +100,6 @@ struct AppTabNavigation: View {
 struct AppTabNavigation_Previews: PreviewProvider {
     static var previews: some View {
         AppTabNavigation()
+            .environmentObject(Model())
     }
 }

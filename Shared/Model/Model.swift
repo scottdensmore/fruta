@@ -39,7 +39,7 @@ class Model: ObservableObject {
     
     private let allProductIdentifiers = Set([Model.unlockAllRecipesIdentifier])
     private var fetchedProducts: [Product] = []
-    private var updatesHandler: Task<Void, Error>? = nil
+    private var updatesHandler: Task<Void, Never>? = nil
     
     init() {
         // Start listening for transaction info updates, like if the user
@@ -165,11 +165,15 @@ extension Model {
     
     private func fetchProducts() {
         Task { @MainActor in
-            self.fetchedProducts = try await Product.products(for: allProductIdentifiers)
-            self.unlockAllRecipesProduct = self.fetchedProducts
-                .first { $0.id == Model.unlockAllRecipesIdentifier }
-            // Check if the user owns all recipes at app launch.
-            await self.updateAllRecipesOwned()
+            do {
+                self.fetchedProducts = try await Product.products(for: allProductIdentifiers)
+                self.unlockAllRecipesProduct = self.fetchedProducts
+                    .first { $0.id == Model.unlockAllRecipesIdentifier }
+                // Check if the user owns all recipes at app launch.
+                await self.updateAllRecipesOwned()
+            } catch {
+                print("Failed to fetch products: \(error)")
+            }
         }
     }
     
@@ -179,12 +183,14 @@ extension Model {
             self.allRecipesUnlocked = false
             return
         }
-        guard let entitlement = await product.currentEntitlement,
-              case .verified(_) = entitlement else {
-                  self.allRecipesUnlocked = false
-                  return
+        var isUnlocked = false
+        for await entitlement in product.currentEntitlements {
+            if case .verified(let transaction) = entitlement, transaction.revocationDate == nil {
+                isUnlocked = true
+                break
+            }
         }
-        self.allRecipesUnlocked = true
+        self.allRecipesUnlocked = isUnlocked
     }
     
     /// - Important: This method never returns, it will only suspend.

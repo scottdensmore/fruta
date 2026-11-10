@@ -20,18 +20,10 @@ struct SmoothieList: View {
     
     var body: some View {
         ScrollViewReader { proxy in
-            List {
+            List(selection: $model.selectedSmoothieID) {
                 ForEach(listedSmoothies) { smoothie in
-                    NavigationLink(tag: smoothie.id, selection: $model.selectedSmoothieID) {
-                        SmoothieView(smoothie: smoothie)
-                    } label: {
+                    NavigationLink(value: smoothie.id) {
                         SmoothieRow(smoothie: smoothie)
-                    }
-                    .onChange(of: model.selectedSmoothieID) { newValue in
-                        // Need to make sure the Smoothie exists.
-                        guard let smoothieID = newValue, let smoothie = Smoothie(for: smoothieID) else { return }
-                        proxy.scrollTo(smoothie.id)
-                        model.selectedSmoothieID = smoothie.id
                     }
                     .swipeActions {
                         Button {
@@ -49,6 +41,12 @@ struct SmoothieList: View {
                     }
                 }
             }
+            .onChange(of: model.selectedSmoothieID) { _, newValue in
+                // Need to make sure the Smoothie exists.
+                guard let smoothieID = newValue, let smoothie = Smoothie(for: smoothieID) else { return }
+                proxy.scrollTo(smoothie.id)
+                model.selectedSmoothieID = smoothie.id
+            }
             .accessibilityRotor("Smoothies", entries: smoothies, entryLabel: \.title)
             .accessibilityRotor("Favorite Smoothies", entries: smoothies.filter { model.isFavorite(smoothie: $0) }, entryLabel: \.title)
             .searchable(text: $model.searchString) {
@@ -63,7 +61,7 @@ struct SmoothieList: View {
 struct SmoothieList_Previews: PreviewProvider {
     static var previews: some View {
         ForEach([ColorScheme.light, .dark], id: \.self) { scheme in
-            NavigationView {
+            NavigationStack {
                 SmoothieList(smoothies: Smoothie.all())
                     .navigationTitle(Text("Smoothies", comment: "Navigation title for the full list of smoothies"))
                     .environmentObject(Model())

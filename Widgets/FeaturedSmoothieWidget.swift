@@ -7,7 +7,6 @@ A widget that highlights featured smoothies.
 
 import WidgetKit
 import SwiftUI
-import Intents
 
 struct FeaturedSmoothieWidget: Widget {
     var supportedFamilies: [WidgetFamily] {
@@ -25,6 +24,7 @@ struct FeaturedSmoothieWidget: Widget {
         .configurationDisplayName(Text("Featured Smoothie", comment: "The name shown for the widget when the user adds or edits it"))
         .description(Text("Displays the latest featured smoothie!", comment: "Description shown for the widget when the user adds or edits it"))
         .supportedFamilies(supportedFamilies)
+        .contentMarginsDisabled()
     }
 }
 
@@ -132,7 +132,9 @@ struct FeaturedSmoothieEntryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background { BubbleBackground() }
+        .containerBackground(for: .widget) {
+            BubbleBackground()
+        }
     }
 }
 
